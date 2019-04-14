@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t yannessaj/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run yannessaj/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t yannessaj/multi-client ./client
+  - docker build -t yannessaj/multi-nginx ./nginx
+  - docker build -t yannessaj/multi-server ./server
+  - docker build -t yannessaj/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to Docker hub
+  - docker push yannessaj/multi-client
+  - docker push yannessaj/multi-nginx
+  - docker push yannessaj/multi-server
+  - docker push yannessaj/multi-worker
